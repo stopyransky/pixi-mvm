@@ -1,0 +1,21 @@
+{
+  "name": "pixi-mvm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "browser-sync start --server --files '*.js'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "d3": "^5.5.0",
+    "pixi-filters": "^2.6.1",
+    "pixi.js": "^4.8.1"
+  },
+  "devDependencies": {
+    "browser-sync": "^2.24.5"
+  }
+}
