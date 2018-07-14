@@ -1,6 +1,6 @@
 # About
 
-Repo contains a proof of concept for interactive data visualization on WebGL Canvas - force directed graph generated in Pixi and D3. 
+Repo contains a example of interactive data visualization on WebGL Canvas - force directed graph generated in Pixi and D3. 
 
 ### [Live Demo](https://codepen.io/stopyransky/full/vrMxKQ/)
 
