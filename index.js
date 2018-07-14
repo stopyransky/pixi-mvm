@@ -1,30 +1,9 @@
-/**
-   GOAL - create minimum viable example of data visualization in PIXI.js with use of D3.js as supporting library
-  FEATURES:
-  - (data representation) represents underlying data, allows representation of hierarchy as defined in data
-  - (performance, item quantity) performing well for 1000+ items (preferably unlimited/10k interactive items)
-  - (item complexity) each item can be simple as dot or rectangle but also complex as ineractive svg, image sprite etc 
-  - (interactivity) each item should be interactive on pointer events (including drag and scroll), precisely:
-    - single node 
-      - click,
-      - mouseover,
-      - mouseout
-      - dragging,
-      - zoom on single element*
-    - canvas 
-       - dragging empty space = panning
-       - scrolling = zooming
-  - (motion) motion based on physics, user interaction and individual behavior (agents simulation, d3.simulation)
-  - (animation, transition) transitioning between 2d and 3d views and back 
-  - (high visual appeal) enabling one or multiple shader passes / filters for different effects per whole scene or single item
-*/
-
 let width = window.innerWidth;
 let height = window.innerHeight;
 let usePixiEvents = true;
 let transform = d3.zoomIdentity;
 let mouse = [width / 2, height / 2];
-let numberOfItems = 5000;
+let numberOfItems = 1000;
 let dragging = false;
 let zooming = false;
 let panning = false;
