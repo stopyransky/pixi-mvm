@@ -4,7 +4,9 @@ Repo contains a proof of concept for interactive data visualization on WebGL Can
 
 ### [Live Demo](https://codepen.io/stopyransky/full/vrMxKQ/)
 
-![text](./img/thumbnail.gif =100%x)
+<p align="center">
+  <img src="img/thumbnail.gif" width="512" title="demo thumbnail">
+</p>
 
 # Features
 
