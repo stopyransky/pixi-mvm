@@ -2,7 +2,7 @@
 
 Repo contains a example of interactive data visualization on WebGL Canvas - force directed graph generated in Pixi and D3. 
 
-### [Live Demo](https://codepen.io/stopyransky/full/vrMxKQ/)
+### [Codepen Demo](https://codepen.io/stopyransky/full/vrMxKQ/)
 
 <p align="center">
   <img src="img/thumbnail.gif" width="320" title="demo thumbnail">
@@ -38,7 +38,7 @@ Repo contains a example of interactive data visualization on WebGL Canvas - forc
 # Usage
 
 ```
-git clone
+git clone https://github.com/stopyransky/pixi-mvm.git
 cd pixi-mvm
 npm install
 npm start

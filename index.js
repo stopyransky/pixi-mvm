@@ -1,8 +1,7 @@
 let width = window.innerWidth;
 let height = window.innerHeight;
-let usePixiEvents = true;
 let transform = d3.zoomIdentity;
-let mouse = [width / 2, height / 2];
+let mouse = [width * 0.5, height * 0.5];
 let numberOfItems = 1000;
 let dragging = false;
 let zooming = false;
@@ -16,7 +15,6 @@ const data = {
   links: []
 };
 
-
 // set filters applied to whole scene
 const dotFilter = new PIXI.filters.DotFilter();
 const bloomFilter = new PIXI.filters.BloomFilter();
@@ -24,16 +22,16 @@ const bloomFilter = new PIXI.filters.BloomFilter();
 const advancedBloomFilter = new PIXI.filters.AdvancedBloomFilter({
   treshold: 0.2, // defines how bright a color needs to be to affect bloom. // default 0.5,
   brightness: 2.0, // default 1.0
-  bloomScale: 1.8, // default 1.0
+  bloomScale: 2.2, // default 1.0
   quality: 8, // default 4
-  blur: 3 // default 2
+  blur: 4 // default 2
 });
 
 const shockwaveFilter = new PIXI.filters.ShockwaveFilter([width/2, height/2], {
-  wavelength: 100,
-  // speed: 1000,
-  // radius: 1000,
-  amplitude: 100
+  wavelength: 200,
+  speed: 800,
+  radius: 0,
+  amplitude: 30
 });
 
 const glitchFilter = new PIXI.filters.GlitchFilter({
@@ -59,7 +57,7 @@ const zoomBlurFilter = new PIXI.filters.ZoomBlurFilter({
 
 const godrayFilter = new PIXI.filters.GodrayFilter({
   angle: 30,
-  gain: 0.5,
+  gain: 0.6,
   lacunarity: 2.5,
   parallel: true,
   time: 0
@@ -80,15 +78,16 @@ document.body.appendChild(app.view); // app.view = <canvas> object
 app.stage.addChild(viewport);
 
 viewport.wheel().drag().decelerate();
+viewport.filterArea = app.renderer.screen;
 
-app.stage.filters = [
+viewport.filters = [
   // dotFilter,
   advancedBloomFilter,
   //  new PIXI.filters.GlowFilter({
 
   //  })
   // zoomBlurFilter,
-  // godrayFilter,
+  godrayFilter,
   crtFilter,
   shockwaveFilter,
   // glitchFilter,
@@ -101,18 +100,19 @@ app.stage.filters = [
 function makeParicleTexture(props) {
   // like canvas.context
   const gfx = new PIXI.Graphics();
-
+  const half = props.size  * 0.5;
   // set fill and line style
   gfx.beginFill(props.fill);
   gfx.lineStyle(props.strokeWidth, props.stroke);
 
   // draw shape
   // to draw other shapes use drawRect(), drawRoundedRect, drawCircle
-  gfx.moveTo(props.strokeWidth, props.strokeWidth);
-  gfx.lineTo(props.size - props.strokeWidth, props.strokeWidth);
-  gfx.lineTo(props.size - props.strokeWidth, props.size - props.strokeWidth);
-  gfx.lineTo(props.strokeWidth, props.size - props.strokeWidth);
-  gfx.lineTo(props.strokeWidth, props.strokeWidth);
+  gfx.drawRect(-half, -half, props.size, props.size);
+  // gfx.moveTo(props.strokeWidth, props.strokeWidth);
+  // gfx.lineTo(props.size - props.strokeWidth, props.strokeWidth);
+  // gfx.lineTo(props.size - props.strokeWidth, props.size - props.strokeWidth);
+  // gfx.lineTo(props.strokeWidth, props.size - props.strokeWidth);
+  // gfx.lineTo(props.strokeWidth, props.strokeWidth);
   gfx.endFill();
 
   //make texture
@@ -125,16 +125,18 @@ function makeParicleTexture(props) {
 const texture = makeParicleTexture({
   fill: 0xd30000,
   stroke: 0xffffff,
-  strokeWidth: 1,
-  size: 10
+  strokeWidth: 4,
+  size: 40,
+  radius: 6
 });
 
 // make particle texture on hover
 const textureHover = makeParicleTexture({
   fill: 0xffffff,
   stroke: 0xffffff,
-  strokeWidth: 1,
-  size: 12
+  strokeWidth: 4,
+  size: 48,
+  radius: 6
 });
 
 // a graphic representing links network
@@ -159,28 +161,23 @@ function makeSprites(numberOfItems) {
     sprite.rotation = i * 10;
     sprite.interactive = true;
     sprite.buttonMode = true; // cursor change
-    sprite.scale.set(Math.random() * 2 + 1);
+    // sprite.scale.set(Math.random() * 2 + 1);
+    sprite.scale.set((Math.random() * 2 + 1) * 0.25)
     //  slow
     //  sprite.filters = [new PIXI.filters.VoidFilter()]
     //  sprite.blendMode = PIXI.BLEND_MODES.DIFFERENCE;
     sprite
       .on('pointerover', onMouseOverPixi)
       .on('pointerout', onMouseOutPixi)
-    if(usePixiEvents) {
-      usePIXIDragEvents(sprite);
-    }
+      .on('pointerdown', onDragStartPixi)
+      .on('pointerup', onDragEndPixi)
+      .on('pointerupoutside', onDragEndPixi)
+      .on('pointermove', onDragMovePixi)
+
     sprites.push(sprite);
     viewport.addChild(sprite);
   }
   return sprites;
-}
-
-function usePIXIDragEvents(sprite) {
-  sprite
-    .on('pointerdown', onDragStartPixi)
-    .on('pointerup', onDragEndPixi)
-    .on('pointerupoutside', onDragEndPixi)
-    .on('pointermove', onDragMovePixi)
 }
 
 function makeLinks(nodes) {
@@ -203,7 +200,7 @@ const forceLink = d3
 
 const forceCharge = d3
   .forceManyBody()
-  // .strength(chargeStrength);
+  // .strength(chargeStrength)
   .distanceMax(chargeMax)
   // .distanceMin(chargeMin);
 
@@ -220,11 +217,10 @@ function makeSimulation(data, manualMode) {
     .alphaTarget(0) // default 0
     .velocityDecay(0.4) // default 0.4
     .force('charge', forceCharge)
-    .force('center', forceCenter)
+    // .force('center', forceCenter)
     .force('link', forceLink)
     .force('collision', forceCollision)
     .on('tick', function() {
-      //  console.log(this.alpha())
       // on timer tick
     })
     .on('end', function() {
@@ -242,25 +238,20 @@ simulation = makeSimulation(data, false);
 // // use pixi to loop to update links
 app.ticker.add(function update(delta) {
   // simulation.tick();
-  drawLinks(data, linksGraphics);
-  //  glitchFilter.refresh()
-  crtFilter.time += delta * 0.1
-  godrayFilter.time += delta * 0.0001,
-  shockwaveFilter.time += 0.1
-});
-
-function drawLinks(_data, _links) {
-  _links.clear();
-  _links.alpha = 0.2; // transparency
-
-  _data.links.forEach(link => {
+  linksGraphics.clear();
+  linksGraphics.alpha = 0.2; // transparency
+  data.links.forEach(link => {
     let { source, target } = link;
-    _links.lineStyle(2, 0xfeefef);
-    _links.moveTo(source.x, source.y);
-    _links.lineTo(target.x, target.y);
+    linksGraphics.lineStyle(2, 0xfeefef);
+    linksGraphics.moveTo(source.x, source.y);
+    linksGraphics.lineTo(target.x, target.y);
   });
-  _links.endFill();
-}
+  linksGraphics.endFill();
+  crtFilter.time += delta * 0.1
+  godrayFilter.time += delta * 0.01,
+  shockwaveFilter.time += 0.01
+  // glitchFilter.refresh()
+});
 
 /** INTERACTION HANDLERS **/
 
@@ -277,7 +268,6 @@ function onMouseOutPixi() {
 }
 
 function onDragStartPixi(event) {
-  console.log('pixi dragStart');
   viewport.pausePlugin('drag');
   simulation.alphaTarget(0.2).restart();
   this.eventData = event.data;
@@ -287,7 +277,6 @@ function onDragStartPixi(event) {
   dragging = true;
 }
 function onDragMovePixi(event) {
-  // console.log('dragging')
   if(this.isDown) {
     this.dragging = true;
   }
@@ -301,8 +290,7 @@ function onDragMovePixi(event) {
 }
 
 function onDragEndPixi(event) {
-  console.log('pixi dragEnd')
-  if(!event.active) simulation.alphaTarget(0);
+  simulation.alphaTarget(0);
   this.alpha = 1;
   if(this.dragging) {
     this.dragging = false;
@@ -310,8 +298,8 @@ function onDragEndPixi(event) {
     this.isOver = false;
     this.texture = texture;
   }
-  if(this.isDown) {
-    onMouseClickPixi(this)
+  if(this.isDown && !this.dragging) {
+    onMouseClickPixi(this, event)
   }
   this.isDown = false;
   this.fx = null;
@@ -320,6 +308,10 @@ function onDragEndPixi(event) {
   viewport.resumePlugin('drag');
 }
 
-function onMouseClickPixi(subject) {
+function onMouseClickPixi(subject, event) {
   subject.isOver = true;
+  coords = event.data.getLocalPosition(viewport.parent)
+  shockwaveFilter.center.x =  coords.x;
+  shockwaveFilter.center.y = coords.y;
+  shockwaveFilter.time = 0.0;
 }
