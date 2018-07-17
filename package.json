@@ -1,15 +1,23 @@
 {
   "name": "pixi-mvm",
   "version": "1.0.0",
-  "description": "",
+  "description": "Force directed graph generated in Pixi and D3",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "browser-sync start --server --files '*.js'"
+    "start": "browser-sync start --server --files '*.js'",
+    "build": "webpack --config=webpack.config.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "pixi",
+    "d3",
+    "dataviz",
+    "shaders",
+    "webgl"
+  ],
+  "repository": "https://github.com/stopyransky/pixi-mvm.git",
+  "author": "Karol Stopyra",
+  "license": "MIT",
   "dependencies": {
     "d3": "^5.5.0",
     "pixi-filters": "^2.6.1",
@@ -17,6 +25,11 @@
     "pixi.js": "^4.8.1"
   },
   "devDependencies": {
-    "browser-sync": "^2.24.5"
+    "browser-sync": "^2.24.5",
+    "extract-loader": "^2.0.1",
+    "file-loader": "^1.1.11",
+    "html-loader": "^0.5.5",
+    "webpack": "^4.16.1",
+    "webpack-cli": "^3.0.8"
   }
 }

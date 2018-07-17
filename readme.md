@@ -40,14 +40,3 @@ cd pixi-mvm
 npm install
 npm start
 ```
-
-## Dependencies
- - pixi
- - pixi-filters
- - pixi-viewport
- - d3
-
-## Dev Dependencies
- - browser-sync
-
-

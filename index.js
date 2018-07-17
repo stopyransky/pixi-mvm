@@ -1,14 +1,12 @@
 let width = window.innerWidth;
 let height = window.innerHeight;
 let transform = d3.zoomIdentity;
-let mouse = [width * 0.5, height * 0.5];
 let numberOfItems = 1000;
 let dragging = false;
-let zooming = false;
-let panning = false;
 let linkDistance = 100;
-let chargeMax = 600;
-let chargeStrength = -1;
+let chargeMax = 800;
+// let chargeMin = 350;
+// let chargeStrength = 1;
 
 const data = {
   nodes: [],
@@ -83,39 +81,22 @@ viewport.filterArea = app.renderer.screen;
 viewport.filters = [
   // dotFilter,
   advancedBloomFilter,
-  //  new PIXI.filters.GlowFilter({
-
-  //  })
   // zoomBlurFilter,
   godrayFilter,
   crtFilter,
   shockwaveFilter,
   // glitchFilter,
-  // new PIXI.filters.GlowFilter(15, 2, 1, 0xFF0000, 0.5),
-  // new PIXI.filters.PixelateFilter(), // works
-  // new PIXI.filters.OldFilmFilter(),
 ];
 
 // particle texture generator - used for sprites
 function makeParicleTexture(props) {
-  // like canvas.context
   const gfx = new PIXI.Graphics();
   const half = props.size  * 0.5;
-  // set fill and line style
   gfx.beginFill(props.fill);
   gfx.lineStyle(props.strokeWidth, props.stroke);
-
-  // draw shape
-  // to draw other shapes use drawRect(), drawRoundedRect, drawCircle
   gfx.drawRect(-half, -half, props.size, props.size);
-  // gfx.moveTo(props.strokeWidth, props.strokeWidth);
-  // gfx.lineTo(props.size - props.strokeWidth, props.strokeWidth);
-  // gfx.lineTo(props.size - props.strokeWidth, props.size - props.strokeWidth);
-  // gfx.lineTo(props.strokeWidth, props.size - props.strokeWidth);
-  // gfx.lineTo(props.strokeWidth, props.strokeWidth);
   gfx.endFill();
 
-  //make texture
   const texture = app.renderer.generateTexture(gfx, PIXI.SCALE_MODES.LINEAR, 2);
 
   return texture;
@@ -149,10 +130,9 @@ function makeSprites(numberOfItems) {
   const sprites = [];
   for (let i = 0; i < numberOfItems; i++) {
     const sprite = new PIXI.Sprite(texture);
-    //  sprite.tint = Math.random() * 0xaa0000
     sprite.x = Math.random() * width;
     sprite.y = Math.random() * height;
-    sprite.radius = 12; // for collision
+    sprite.radius = 12;
     sprite.index = i;
     sprite.peers = d3.range(Math.floor(Math.random() * 10))
       .map(() => Math.floor(Math.random() * 100));
@@ -160,12 +140,8 @@ function makeSprites(numberOfItems) {
     sprite.anchor.y = 0.5;
     sprite.rotation = i * 10;
     sprite.interactive = true;
-    sprite.buttonMode = true; // cursor change
-    // sprite.scale.set(Math.random() * 2 + 1);
+    sprite.buttonMode = true;
     sprite.scale.set((Math.random() * 2 + 1) * 0.25)
-    //  slow
-    //  sprite.filters = [new PIXI.filters.VoidFilter()]
-    //  sprite.blendMode = PIXI.BLEND_MODES.DIFFERENCE;
     sprite
       .on('pointerover', onMouseOverPixi)
       .on('pointerout', onMouseOutPixi)
@@ -235,9 +211,7 @@ function makeSimulation(data, manualMode) {
 
 simulation = makeSimulation(data, false);
 
-// // use pixi to loop to update links
 app.ticker.add(function update(delta) {
-  // simulation.tick();
   linksGraphics.clear();
   linksGraphics.alpha = 0.2; // transparency
   data.links.forEach(link => {
