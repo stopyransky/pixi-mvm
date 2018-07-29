@@ -6,8 +6,7 @@ let dragging = false;
 let linkDistance = 100;
 let chargeMax = 800;
 // let chargeMin = 350;
-// let chargeStrength = 1;
-
+let mouse = [width/2, height/2]
 const data = {
   nodes: [],
   links: []
@@ -71,6 +70,11 @@ const viewport = new PIXI.extras.Viewport({
 });
 
 app.renderer.backgroundColor = 0x232323;
+
+
+window.addEventListener("mousemove", function() {
+  mouse = app.renderer.plugins.interaction.mouse.global;
+});
 
 document.body.appendChild(app.view); // app.view = <canvas> object
 app.stage.addChild(viewport);
@@ -155,34 +159,42 @@ function makeSprites(numberOfItems) {
   }
   return sprites;
 }
+const linkFns = [
+  i => Math.floor(Math.random() * i), 
+  i => Math.floor(Math.random() * Math.sqrt(i)), 
+  i => Math.floor(Math.sqrt(i))
+]
 
 function makeLinks(nodes) {
-  const links = d3.range(nodes.length - 1).map(i => ({
-    source: Math.floor(Math.sqrt(i)),
-    target: i + 1,
-    value: Math.random() + 0.5
-  }));
+  const randomIndex = Math.floor((Math.random() * linkFns.length));
+  const links = d3.range(nodes.length - 1)
+    .map(i => ({
+      source: linkFns[randomIndex](i),
+      target: i + 1,
+      value: Math.random() + 0.5
+    }));
   return links;
 }
 
 data.nodes = makeSprites(numberOfItems);
 data.links = makeLinks(data.nodes);
 
-const forceLink = d3
+let forceLink = d3
   .forceLink(data.links)
   .id(d => d.index)
   .distance(linkDistance)
-  .strength(d => d.value);
+  // .strength(1);
 
 const forceCharge = d3
   .forceManyBody()
-  // .strength(chargeStrength)
   .distanceMax(chargeMax)
   // .distanceMin(chargeMin);
 
 const forceCenter = d3.forceCenter(width * 0.5, height * 0.5);
 
-const forceCollision = d3.forceCollide().radius(d => d.radius).iterations(2);
+const forceCollision = d3.forceCollide()
+  .radius(d => d.radius)
+  // .iterations(2);
 
 function makeSimulation(data, manualMode) {
   const simulation = d3
@@ -196,6 +208,7 @@ function makeSimulation(data, manualMode) {
     // .force('center', forceCenter)
     .force('link', forceLink)
     .force('collision', forceCollision)
+    .force('attract', d3.forceCenter(width/2, height/2))
     .on('tick', function() {
       // on timer tick
     })
@@ -214,13 +227,15 @@ simulation = makeSimulation(data, false);
 app.ticker.add(function update(delta) {
   linksGraphics.clear();
   linksGraphics.alpha = 0.2; // transparency
-  data.links.forEach(link => {
-    let { source, target } = link;
-    linksGraphics.lineStyle(2, 0xfeefef);
-    linksGraphics.moveTo(source.x, source.y);
-    linksGraphics.lineTo(target.x, target.y);
-  });
-  linksGraphics.endFill();
+  if(forceLinkActive) {
+    data.links.forEach(link => {
+      let { source, target } = link;
+      linksGraphics.lineStyle(2, 0xfeefef);
+      linksGraphics.moveTo(source.x, source.y);
+      linksGraphics.lineTo(target.x, target.y);
+    });
+    linksGraphics.endFill();
+  }
   crtFilter.time += delta * 0.1
   godrayFilter.time += delta * 0.01,
   shockwaveFilter.time += 0.01
@@ -243,23 +258,21 @@ function onMouseOutPixi() {
 
 function onDragStartPixi(event) {
   viewport.pausePlugin('drag');
-  simulation.alphaTarget(0.2).restart();
   this.eventData = event.data;
   this.fx = this.x;
   this.fy = this.y;
   this.isDown = true;
   dragging = true;
+  simulation.alphaTarget(0.3).restart();
 }
-function onDragMovePixi(event) {
+function onDragMovePixi() {
   if(this.isDown) {
     this.dragging = true;
   }
   if (this.dragging) {
     const newPosition = this.eventData.getLocalPosition(this.parent);
-    this.x = newPosition.x;
-    this.y = newPosition.y;
-    this.fx = this.x;
-    this.fy = this.y;
+    this.fx = newPosition.x;
+    this.fy = newPosition.y;
   }
 }
 
@@ -284,8 +297,49 @@ function onDragEndPixi(event) {
 
 function onMouseClickPixi(subject, event) {
   subject.isOver = true;
-  coords = event.data.getLocalPosition(viewport.parent)
-  shockwaveFilter.center.x =  coords.x;
+  const coords = event.data.getLocalPosition(viewport.parent)
+  shockwaveFilter.center.x = coords.x;
   shockwaveFilter.center.y = coords.y;
-  shockwaveFilter.time = 0.0;
+  shockwaveFilter.time = 0.0;  
+}
+
+let forceLinkActive = true;
+let mouseAttract = true;
+
+function handleLinkForceControl(e) {
+  if(forceLinkActive) {
+    simulation.force('link', null);
+    simulation.alphaTarget(0.3).restart();
+    forceLinkActive = false
+  } else {
+    data.links = makeLinks(data.nodes);
+    forceLink = d3
+      .forceLink(data.links)
+      .id(d => d.index)
+      .distance(linkDistance)
+      // .strength(1.5);
+    simulation.force('link', forceLink);
+    simulation.alphaTarget(0.3).restart();
+    forceLinkActive = true;
+  }
+}
+
+function toggleMouseAttract(e) {
+  if(mouseAttract) {
+    simulation.force('attract', null);
+    simulation.alphaTarget(0.3).restart();
+    mouseAttract = false;
+  } else {
+    // simulation.force('attract', )
+    simulation.alphaTarget(0.3).restart();
+    mouseAttract = true;
+  }
+}
+
+function toggleSpriteVisibility(e) {
+
+}
+
+function toggleLinksVisibility(e) {
+
 }
