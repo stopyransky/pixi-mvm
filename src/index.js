@@ -1,67 +1,31 @@
+import * as PIXI from 'pixi.js';
+import Viewport from 'pixi-viewport';
+PIXI.extras.Viewport = Viewport;
+import * as d3 from 'd3';
+
+import forceAttract from './forces/forceAttract';
+import { dotFilter, 
+  shockwaveFilter as shockwaveFilterConfig, 
+  crtFilter, 
+  advancedBloomFilter, 
+  godrayFilter,
+  glitchFilter,
+  zoomBlurFilter
+} from './filters';
+
 let width = window.innerWidth;
 let height = window.innerHeight;
 let transform = d3.zoomIdentity;
-let mouse = [width * 0.5, height * 0.5];
-let numberOfItems = 1000;
+let numberOfItems = 500;
 let dragging = false;
-let zooming = false;
-let panning = false;
 let linkDistance = 100;
-let chargeMax = 600;
-let chargeStrength = -1;
-
+let chargeMax = 800;
+let simulation = null;
+let mouse = [width/2, height/2]
 const data = {
   nodes: [],
   links: []
 };
-
-// set filters applied to whole scene
-const dotFilter = new PIXI.filters.DotFilter();
-const bloomFilter = new PIXI.filters.BloomFilter();
-
-const advancedBloomFilter = new PIXI.filters.AdvancedBloomFilter({
-  treshold: 0.2, // defines how bright a color needs to be to affect bloom. // default 0.5,
-  brightness: 2.0, // default 1.0
-  bloomScale: 2.2, // default 1.0
-  quality: 8, // default 4
-  blur: 4 // default 2
-});
-
-const shockwaveFilter = new PIXI.filters.ShockwaveFilter([width/2, height/2], {
-  wavelength: 200,
-  speed: 800,
-  radius: 0,
-  amplitude: 30
-});
-
-const glitchFilter = new PIXI.filters.GlitchFilter({
-  offset: 20,
-  fillMode: 4,
-});
-
-const crtFilter = new PIXI.filters.CRTFilter({
-  curvature: 0,
-  lineWidth: 1.0, // default 1.0
-  lineContrast: 0.3,
-  vignetting: 0.0, // 0.3
-  noise: 0.2,
-  noiseSize: 2
-});
-
-const zoomBlurFilter = new PIXI.filters.ZoomBlurFilter({
-  strength: 0.1,
-  center: [0.5, 0.5],
-  innerRadius: 0,
-  radius: -1
-});
-
-const godrayFilter = new PIXI.filters.GodrayFilter({
-  angle: 30,
-  gain: 0.6,
-  lacunarity: 2.5,
-  parallel: true,
-  time: 0
-});
 
 const app = new PIXI.Application(width, height, { antialias: false });
 
@@ -77,45 +41,36 @@ app.renderer.backgroundColor = 0x232323;
 document.body.appendChild(app.view); // app.view = <canvas> object
 app.stage.addChild(viewport);
 
+const canvasSelection = d3.select(app.view)
+
+canvasSelection.on('mousemove', () => {
+  mouse = [d3.event.clientX, d3.event.clientY]
+});
+
 viewport.wheel().drag().decelerate();
 viewport.filterArea = app.renderer.screen;
+
+const shockwaveFilter = shockwaveFilterConfig(width, height);
 
 viewport.filters = [
   // dotFilter,
   advancedBloomFilter,
-  //  new PIXI.filters.GlowFilter({
-
-  //  })
   // zoomBlurFilter,
   godrayFilter,
-  crtFilter,
+  // crtFilter,
   shockwaveFilter,
   // glitchFilter,
-  // new PIXI.filters.GlowFilter(15, 2, 1, 0xFF0000, 0.5),
-  // new PIXI.filters.PixelateFilter(), // works
-  // new PIXI.filters.OldFilmFilter(),
 ];
 
 // particle texture generator - used for sprites
 function makeParicleTexture(props) {
-  // like canvas.context
   const gfx = new PIXI.Graphics();
   const half = props.size  * 0.5;
-  // set fill and line style
   gfx.beginFill(props.fill);
   gfx.lineStyle(props.strokeWidth, props.stroke);
-
-  // draw shape
-  // to draw other shapes use drawRect(), drawRoundedRect, drawCircle
   gfx.drawRect(-half, -half, props.size, props.size);
-  // gfx.moveTo(props.strokeWidth, props.strokeWidth);
-  // gfx.lineTo(props.size - props.strokeWidth, props.strokeWidth);
-  // gfx.lineTo(props.size - props.strokeWidth, props.size - props.strokeWidth);
-  // gfx.lineTo(props.strokeWidth, props.size - props.strokeWidth);
-  // gfx.lineTo(props.strokeWidth, props.strokeWidth);
   gfx.endFill();
 
-  //make texture
   const texture = app.renderer.generateTexture(gfx, PIXI.SCALE_MODES.LINEAR, 2);
 
   return texture;
@@ -149,10 +104,9 @@ function makeSprites(numberOfItems) {
   const sprites = [];
   for (let i = 0; i < numberOfItems; i++) {
     const sprite = new PIXI.Sprite(texture);
-    //  sprite.tint = Math.random() * 0xaa0000
     sprite.x = Math.random() * width;
     sprite.y = Math.random() * height;
-    sprite.radius = 12; // for collision
+    sprite.radius = 12;
     sprite.index = i;
     sprite.peers = d3.range(Math.floor(Math.random() * 10))
       .map(() => Math.floor(Math.random() * 100));
@@ -160,12 +114,8 @@ function makeSprites(numberOfItems) {
     sprite.anchor.y = 0.5;
     sprite.rotation = i * 10;
     sprite.interactive = true;
-    sprite.buttonMode = true; // cursor change
-    // sprite.scale.set(Math.random() * 2 + 1);
+    sprite.buttonMode = true;
     sprite.scale.set((Math.random() * 2 + 1) * 0.25)
-    //  slow
-    //  sprite.filters = [new PIXI.filters.VoidFilter()]
-    //  sprite.blendMode = PIXI.BLEND_MODES.DIFFERENCE;
     sprite
       .on('pointerover', onMouseOverPixi)
       .on('pointerout', onMouseOutPixi)
@@ -179,34 +129,42 @@ function makeSprites(numberOfItems) {
   }
   return sprites;
 }
+const linkFns = [
+  i => Math.floor(Math.random() * i), 
+  i => Math.floor(Math.random() * Math.sqrt(i)), 
+  i => Math.floor(Math.sqrt(i))
+]
 
 function makeLinks(nodes) {
-  const links = d3.range(nodes.length - 1).map(i => ({
-    source: Math.floor(Math.sqrt(i)),
-    target: i + 1,
-    value: Math.random() + 0.5
-  }));
+  const randomIndex = Math.floor((Math.random() * linkFns.length));
+  const links = d3.range(nodes.length - 1)
+    .map(i => ({
+      source: linkFns[randomIndex](i),
+      target: i + 1,
+      value: Math.random() + 0.5
+    }));
   return links;
 }
 
 data.nodes = makeSprites(numberOfItems);
 data.links = makeLinks(data.nodes);
 
-const forceLink = d3
+let forceLink = d3
   .forceLink(data.links)
   .id(d => d.index)
   .distance(linkDistance)
-  .strength(d => d.value);
+  // .strength(1);
 
 const forceCharge = d3
   .forceManyBody()
-  // .strength(chargeStrength)
   .distanceMax(chargeMax)
   // .distanceMin(chargeMin);
 
 const forceCenter = d3.forceCenter(width * 0.5, height * 0.5);
 
-const forceCollision = d3.forceCollide().radius(d => d.radius).iterations(2);
+const forceCollision = d3.forceCollide()
+  .radius(d => d.radius)
+  // .iterations(2);
 
 function makeSimulation(data, manualMode) {
   const simulation = d3
@@ -222,6 +180,10 @@ function makeSimulation(data, manualMode) {
     .force('collision', forceCollision)
     .on('tick', function() {
       // on timer tick
+      if(mouseAttract) {
+        simulation.force('attract').target(mouse)
+        // forceAttract.target(mouse)
+      }
     })
     .on('end', function() {
       // when alpha < alphaMin
@@ -235,18 +197,18 @@ function makeSimulation(data, manualMode) {
 
 simulation = makeSimulation(data, false);
 
-// // use pixi to loop to update links
 app.ticker.add(function update(delta) {
-  // simulation.tick();
   linksGraphics.clear();
   linksGraphics.alpha = 0.2; // transparency
-  data.links.forEach(link => {
-    let { source, target } = link;
-    linksGraphics.lineStyle(2, 0xfeefef);
-    linksGraphics.moveTo(source.x, source.y);
-    linksGraphics.lineTo(target.x, target.y);
-  });
-  linksGraphics.endFill();
+  if(forceLinkActive) {
+    data.links.forEach(link => {
+      let { source, target } = link;
+      linksGraphics.lineStyle(2, 0xfeefef);
+      linksGraphics.moveTo(source.x, source.y);
+      linksGraphics.lineTo(target.x, target.y);
+    });
+    linksGraphics.endFill();
+  }
   crtFilter.time += delta * 0.1
   godrayFilter.time += delta * 0.01,
   shockwaveFilter.time += 0.01
@@ -269,23 +231,21 @@ function onMouseOutPixi() {
 
 function onDragStartPixi(event) {
   viewport.pausePlugin('drag');
-  simulation.alphaTarget(0.2).restart();
   this.eventData = event.data;
   this.fx = this.x;
   this.fy = this.y;
   this.isDown = true;
   dragging = true;
+  simulation.alphaTarget(0.3).restart();
 }
-function onDragMovePixi(event) {
+function onDragMovePixi() {
   if(this.isDown) {
     this.dragging = true;
   }
   if (this.dragging) {
     const newPosition = this.eventData.getLocalPosition(this.parent);
-    this.x = newPosition.x;
-    this.y = newPosition.y;
-    this.fx = this.x;
-    this.fy = this.y;
+    this.fx = newPosition.x;
+    this.fy = newPosition.y;
   }
 }
 
@@ -310,8 +270,77 @@ function onDragEndPixi(event) {
 
 function onMouseClickPixi(subject, event) {
   subject.isOver = true;
-  coords = event.data.getLocalPosition(viewport.parent)
-  shockwaveFilter.center.x =  coords.x;
+  const coords = event.data.getLocalPosition(viewport.parent)
+  shockwaveFilter.center.x = coords.x;
   shockwaveFilter.center.y = coords.y;
-  shockwaveFilter.time = 0.0;
+  shockwaveFilter.time = 0.0;  
 }
+
+let forceLinkActive = true;
+let mouseAttract = false;
+
+function handleLinkForceControl(e) {
+  if(forceLinkActive) {
+    simulation.force('link', null);
+    simulation.alphaTarget(0.3).restart();
+    forceLinkActive = false
+  } else {
+    data.links = makeLinks(data.nodes);
+    forceLink = d3
+      .forceLink(data.links)
+      .id(d => d.index)
+      .distance(linkDistance)
+      // .strength(1.5);
+    simulation.force('link', forceLink);
+    simulation.alphaTarget(0.3).restart();
+    forceLinkActive = true;
+  }
+}
+
+function toggleMouseAttract(e) {
+  if(mouseAttract) {
+    // disable attract force
+    simulation
+      .velocityDecay(0.3)
+      .force('attract', null)
+      .force('charge', forceCharge)
+      .force('link', forceLink)
+      .force('collision', forceCollision)
+    if(forceLinkActive) simulation.force('link', forceLink)
+    simulation.alphaTarget(0.3).restart();
+    mouseAttract = false;
+  } else {
+    // enable attract force
+    // console.log(mouse, mouseAttract)
+    simulation
+      .velocityDecay(0.0)
+      .force('attract', forceAttract())
+      .force('charge', null)
+      .force('collision', null)
+    if(forceLinkActive) simulation.force('link', null)
+    simulation.alpha(0.4)
+    simulation.alphaTarget(0.3).restart();
+    mouseAttract = true;
+  }
+}
+
+function toggleSpriteVisibility(e) {
+
+}
+
+function toggleLinksVisibility(e) {
+
+}
+
+const linksToggle = document.createElement('div');
+linksToggle.setAttribute('class', 'control links');
+linksToggle.onclick = e => handleLinkForceControl(e);
+linksToggle.innerText = "Toggle Links";
+
+const mouseToggle = document.createElement('div');
+mouseToggle.setAttribute('class', 'control mouse-follow');
+mouseToggle.onclick = e => toggleMouseAttract(e);
+mouseToggle.innerText = "Follow Mouse";
+
+document.body.appendChild(linksToggle);
+document.body.appendChild(mouseToggle);
