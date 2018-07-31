@@ -3,7 +3,8 @@ const webpack = require("webpack");
 const HTMLWebpackPlugin = require("html-webpack-plugin");
 const OptmizeCssAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 const MiniCSSExtractPlugin = require("mini-css-extract-plugin");
-const CompressionPlugin = require("compression-webpack-plugin")
+const CompressionPlugin = require("compression-webpack-plugin");
+const CleanWebpackPlugin = require("clean-webpack-plugin");
 const isProd = process.env.NODE_ENV === "production";
 
 module.exports = {
@@ -78,6 +79,9 @@ module.exports = {
     ]
   },
   plugins: [
+    new CleanWebpackPlugin(['docs/*.*'], {
+      verbose: false,
+    }),
     new OptmizeCssAssetsPlugin(),
     new MiniCSSExtractPlugin({
       filename: "[name]-[contenthash].css"
