@@ -57,7 +57,7 @@ viewport.filters = [
   advancedBloomFilter,
   // zoomBlurFilter,
   godrayFilter,
-  // crtFilter,
+  crtFilter,
   shockwaveFilter,
   // glitchFilter,
 ];
@@ -343,4 +343,4 @@ mouseToggle.onclick = e => toggleMouseAttract(e);
 mouseToggle.innerText = "Follow Mouse";
 
 document.body.appendChild(linksToggle);
-document.body.appendChild(mouseToggle);
+// document.body.appendChild(mouseToggle);

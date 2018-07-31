@@ -1,3 +1,4 @@
 node_modules/
 .DS_Store
 screens/
+docs/stats.json
