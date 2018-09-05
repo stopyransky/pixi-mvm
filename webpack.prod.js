@@ -1,28 +1,30 @@
-const path = require("path");
-const webpack = require("webpack");
-const HTMLWebpackPlugin = require("html-webpack-plugin");
-const OptmizeCssAssetsPlugin = require("optimize-css-assets-webpack-plugin");
-const MiniCSSExtractPlugin = require("mini-css-extract-plugin");
-const CompressionPlugin = require("compression-webpack-plugin");
-const CleanWebpackPlugin = require("clean-webpack-plugin");
-const isProd = process.env.NODE_ENV === "production";
+/* eslint-disable no-undef */
+
+const path = require('path');
+const webpack = require('webpack');
+const HTMLWebpackPlugin = require('html-webpack-plugin');
+const OptmizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const MiniCSSExtractPlugin = require('mini-css-extract-plugin');
+const CompressionWebpackPlugin = require('compression-webpack-plugin');
+const CleanWebpackPlugin = require('clean-webpack-plugin');
+// const isProd = process.env.NODE_ENV === 'production';
 
 module.exports = {
-  mode: "production",
+  mode: 'production',
   entry: {
-    main: [ "./main.js" ]
+    main: [ './main.js' ]
   },
   output: {
-    path: path.resolve(__dirname, "./docs"),
-    filename: "[name]-bundle.js"
+    path: path.resolve(__dirname, './docs'),
+    filename: '[name]-bundle.js'
   },
   optimization: {
     splitChunks: {
-      chunks: "all",
+      chunks: 'all',
       cacheGroups: {
         vendor: {
-          name: "vendor",
-          chunks: "initial",
+          name: 'vendor',
+          chunks: 'initial',
           minChunks: 2
         }
       }
@@ -37,10 +39,10 @@ module.exports = {
             loader: MiniCSSExtractPlugin.loader
           },
           {
-            loader: "css-loader"
+            loader: 'css-loader'
           },
           {
-            loader: "sass-loader",
+            loader: 'sass-loader',
             options: {}
           }
         ]
@@ -49,18 +51,18 @@ module.exports = {
         test: /\.html$/,
         use: [
           {
-            loader: "file-loader",
+            loader: 'file-loader',
             options: {
-              name: "[name].html"
+              name: '[name].html'
             }
           },
           {
-            loader: "extract-loader"
+            loader: 'extract-loader'
           },
           {
-            loader: "html-loader",
+            loader: 'html-loader',
             options: {
-              attrs: ["img:src"]
+              attrs: ['img:src']
             }
           }
         ]
@@ -69,9 +71,9 @@ module.exports = {
         test: /\.jpg$/,
         use: [
           {
-            loader: "file-loader",
+            loader: 'file-loader',
             options: {
-              name: "images/[name]-[hash:8].[ext]"
+              name: 'images/[name]-[hash:8].[ext]'
             }
           }
         ]
@@ -84,19 +86,19 @@ module.exports = {
     }),
     new OptmizeCssAssetsPlugin(),
     new MiniCSSExtractPlugin({
-      filename: "[name]-[contenthash].css"
+      filename: '[name]-[contenthash].css'
     }),
     new HTMLWebpackPlugin({
-      template: "./src/index.ejs",
-      title: "PIXI.js MVM"
+      template: './src/index.ejs',
+      title: 'PIXI.js MVM'
     }),
     new webpack.DefinePlugin({
       'process.env': {
-        'NODE_ENV': JSON.stringify("production")
+        'NODE_ENV': JSON.stringify('production')
       }
     }),
-    new CompressionPlugin({
-      algorithm: "gzip"
+    new CompressionWebpackPlugin({
+      algorithm: 'gzip'
     })
   ]
 };

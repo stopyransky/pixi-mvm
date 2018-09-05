@@ -1,18 +1,19 @@
-const path = require("path");
-const webpack = require("webpack");
-const HTMLWebpackPlugin = require("html-webpack-plugin");
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+/* eslint-disable no-undef, no-unused-vars */
+const path = require('path');
+const webpack = require('webpack');
+const HTMLWebpackPlugin = require('html-webpack-plugin');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 module.exports = {
-  mode: "development",
+  mode: 'development',
   entry: {
-    main: "./main.js"
+    main: './main.js'
   },
   output: {
-    path: path.resolve(__dirname, "./docs"),
-    filename: "[name]-bundle.js"
+    path: path.resolve(__dirname, './docs'),
+    filename: '[name]-bundle.js'
   },
   devServer: {
-    contentBase: "docs",
+    contentBase: 'docs',
     overlay: true,
     stats: {
       color: true
@@ -20,11 +21,11 @@ module.exports = {
   },
   optimization: {
     splitChunks: {
-      chunks: "all",
+      chunks: 'all',
       cacheGroups: {
         vendor: {
-          name: "vendor",
-          chunks: "initial",
+          name: 'vendor',
+          chunks: 'initial',
           minChunks: 2
         }
       }
@@ -36,10 +37,10 @@ module.exports = {
         test: /\.css$/,
         use: [
           {
-            loader: "style-loader"
+            loader: 'style-loader'
           },
           {
-            loader: "css-loader"
+            loader: 'css-loader'
           }
         ]
       },
@@ -47,13 +48,13 @@ module.exports = {
         test: /\.sass|scss$/,
         use: [
           {
-            loader: "style-loader"
+            loader: 'style-loader'
           },
           {
-            loader: "css-loader"
+            loader: 'css-loader'
           },
           {
-            loader: "sass-loader"
+            loader: 'sass-loader'
           }
         ]
       },
@@ -61,18 +62,18 @@ module.exports = {
         test: /\.html$/,
         use: [
           {
-            loader: "file-loader",
+            loader: 'file-loader',
             options: {
-              name: "[name].html"
+              name: '[name].html'
             }
           },
           {
-            loader: "extract-loader"
+            loader: 'extract-loader'
           },
           {
-            loader: "html-loader",
+            loader: 'html-loader',
             options: {
-              attrs: ["img:src"]
+              attrs: ['img:src']
             }
           }
         ]
@@ -81,9 +82,9 @@ module.exports = {
         test: /\.jpg$/,
         use: [
           {
-            loader: "file-loader",
+            loader: 'file-loader',
             options: {
-              name: "images/[name]-[hash:8].[ext]"
+              name: 'images/[name]-[hash:8].[ext]'
             }
           }
         ]
@@ -92,8 +93,8 @@ module.exports = {
   },
   plugins: [
     new HTMLWebpackPlugin({
-      template: "./src/index.ejs",
-      title: "PIXI.js MVM"
+      template: './src/index.ejs',
+      title: 'PIXI.js MVM'
     }),
     new BundleAnalyzerPlugin({
       generateStatsFile: true

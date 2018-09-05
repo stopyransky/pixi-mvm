@@ -1,4 +1,5 @@
 // https://github.com/ericsoco/d3-force-attract/blob/master/lib/forceAttract.js
+
 export default function forceAttract(target) {
 
   let nodes,
@@ -14,6 +15,7 @@ export default function forceAttract(target) {
       strength = strengths[i];
       node.vx += (target[0] - node.x) * strength * alpha;
       node.vy += (target[1] - node.y) * strength * alpha;
+
     }
   }
 
@@ -22,11 +24,15 @@ export default function forceAttract(target) {
 
     // populate local `strengths` using `strength` accessor
     strengths = new Array(nodes.length);
-    for (let i=0; i<nodes.length; i++) strengths[i] = strength(nodes[i], i, nodes);
+    for (let i = 0; i < nodes.length; i++) {
+      strengths[i] = strength(nodes[i], i, nodes);
+    }
 
     // populate local `targets` using `target` accessor
     targets = new Array(nodes.length);
-    for (let i=0; i<nodes.length; i++) targets[i] = target(nodes[i], i, nodes);
+    for (let i = 0; i < nodes.length; i++) {
+      targets[i] = target(nodes[i], i, nodes);
+    }
   }
 
   force.initialize = _ => {

@@ -3,8 +3,8 @@ import Viewport from 'pixi-viewport';
 PIXI.extras.Viewport = Viewport;
 import * as d3 from 'd3';
 
-import forceAttract from './forces/forceAttract';
-import { dotFilter, 
+import { 
+  dotFilter, 
   shockwaveFilter as shockwaveFilterConfig, 
   crtFilter, 
   advancedBloomFilter, 
@@ -15,17 +15,19 @@ import { dotFilter,
 
 let width = window.innerWidth;
 let height = window.innerHeight;
-let transform = d3.zoomIdentity;
+// let globalDragging = false;
+let forceLinkActive = true;
+let mouseAttract = false;
 let numberOfItems = 500;
-let dragging = false;
 let linkDistance = 100;
 let chargeMax = 800;
 let simulation = null;
-let mouse = [width/2, height/2]
+let mouse = [width/2, height/2];
 const data = {
   nodes: [],
   links: []
 };
+let linkedByIndex = {};
 
 const app = new PIXI.Application(width, height, { antialias: false });
 
@@ -41,10 +43,10 @@ app.renderer.backgroundColor = 0x232323;
 document.body.appendChild(app.view); // app.view = <canvas> object
 app.stage.addChild(viewport);
 
-const canvasSelection = d3.select(app.view)
+const canvasSelection = d3.select(app.view);
 
 canvasSelection.on('mousemove', () => {
-  mouse = [d3.event.clientX, d3.event.clientY]
+  mouse = [d3.event.clientX, d3.event.clientY];
 });
 
 viewport.wheel().drag().decelerate();
@@ -52,15 +54,25 @@ viewport.filterArea = app.renderer.screen;
 
 const shockwaveFilter = shockwaveFilterConfig(width, height);
 
+const props = {
+  hasDotFilter: false,
+  hasBloomFilter: true,
+  hasGodrayFilter: true,
+  hasCrtFilter: true,
+  hasZoomFilter: false,
+  hasShockwaveFilter: true,
+  hasGlitchFilter: false
+};
+
 viewport.filters = [
-  // dotFilter,
-  advancedBloomFilter,
-  // zoomBlurFilter,
-  godrayFilter,
-  crtFilter,
-  shockwaveFilter,
-  // glitchFilter,
-];
+  props.hasDotFilter && dotFilter,
+  props.hasBloomFilter && advancedBloomFilter,
+  props.hasZoomFilter && zoomBlurFilter,
+  props.hasGodrayFilter && godrayFilter,
+  props.hasCrtFilter && crtFilter,
+  props.hasShockwaveFilter && shockwaveFilter,
+  props.hasGlitchFilter && glitchFilter,
+].filter(f => !!f);
 
 // particle texture generator - used for sprites
 function makeParicleTexture(props) {
@@ -115,14 +127,14 @@ function makeSprites(numberOfItems) {
     sprite.rotation = i * 10;
     sprite.interactive = true;
     sprite.buttonMode = true;
-    sprite.scale.set((Math.random() * 2 + 1) * 0.25)
+    sprite.scale.set((Math.random() * 2 + 1) * 0.25);
     sprite
       .on('pointerover', onMouseOverPixi)
       .on('pointerout', onMouseOutPixi)
       .on('pointerdown', onDragStartPixi)
       .on('pointerup', onDragEndPixi)
       .on('pointerupoutside', onDragEndPixi)
-      .on('pointermove', onDragMovePixi)
+      .on('pointermove', onDragMovePixi);
 
     sprites.push(sprite);
     viewport.addChild(sprite);
@@ -133,7 +145,7 @@ const linkFns = [
   i => Math.floor(Math.random() * i), 
   i => Math.floor(Math.random() * Math.sqrt(i)), 
   i => Math.floor(Math.sqrt(i))
-]
+];
 
 function makeLinks(nodes) {
   const randomIndex = Math.floor((Math.random() * linkFns.length));
@@ -143,27 +155,32 @@ function makeLinks(nodes) {
       target: i + 1,
       value: Math.random() + 0.5
     }));
+    
+  links.forEach(d => {
+    linkedByIndex[`${d.source.index},${d.target.index}`] = true;
+  });
   return links;
 }
 
 data.nodes = makeSprites(numberOfItems);
 data.links = makeLinks(data.nodes);
 
+
 let forceLink = d3
   .forceLink(data.links)
   .id(d => d.index)
-  .distance(linkDistance)
+  .distance(linkDistance);
   // .strength(1);
 
 const forceCharge = d3
   .forceManyBody()
-  .distanceMax(chargeMax)
+  .distanceMax(chargeMax);
   // .distanceMin(chargeMin);
 
-const forceCenter = d3.forceCenter(width * 0.5, height * 0.5);
+// const forceCenter = d3.forceCenter(width * 0.5, height * 0.5);
 
 const forceCollision = d3.forceCollide()
-  .radius(d => d.radius)
+  .radius(d => d.radius);
   // .iterations(2);
 
 function makeSimulation(data, manualMode) {
@@ -180,8 +197,8 @@ function makeSimulation(data, manualMode) {
     .force('collision', forceCollision)
     .on('tick', function() {
       // on timer tick
-      if(mouseAttract) {
-        simulation.force('attract').target(mouse)
+      if (mouseAttract) {
+        simulation.force('attract').target(mouse);
         // forceAttract.target(mouse)
       }
     })
@@ -200,7 +217,7 @@ simulation = makeSimulation(data, false);
 app.ticker.add(function update(delta) {
   linksGraphics.clear();
   linksGraphics.alpha = 0.2; // transparency
-  if(forceLinkActive) {
+  if (forceLinkActive) {
     data.links.forEach(link => {
       let { source, target } = link;
       linksGraphics.lineStyle(2, 0xfeefef);
@@ -209,10 +226,10 @@ app.ticker.add(function update(delta) {
     });
     linksGraphics.endFill();
   }
-  crtFilter.time += delta * 0.1
-  godrayFilter.time += delta * 0.01,
-  shockwaveFilter.time += 0.01
-  // glitchFilter.refresh()
+  if (props.hasCrtFilter) crtFilter.time += delta * 0.1;
+  if (props.hasGodrayFilter) godrayFilter.time += delta * 0.01;
+  if (props.hasShockwaveFilter) shockwaveFilter.time += 0.01;
+  if (props.hasGlitchFilter) glitchFilter.refresh();
 });
 
 /** INTERACTION HANDLERS **/
@@ -235,11 +252,11 @@ function onDragStartPixi(event) {
   this.fx = this.x;
   this.fy = this.y;
   this.isDown = true;
-  dragging = true;
+  // globalDragging = true;
   simulation.alphaTarget(0.3).restart();
 }
 function onDragMovePixi() {
-  if(this.isDown) {
+  if (this.isDown) {
     this.dragging = true;
   }
   if (this.dragging) {
@@ -252,95 +269,52 @@ function onDragMovePixi() {
 function onDragEndPixi(event) {
   simulation.alphaTarget(0);
   this.alpha = 1;
-  if(this.dragging) {
+  if (this.dragging) {
     this.dragging = false;
     this.isDown = false;
     this.isOver = false;
     this.texture = texture;
   }
-  if(this.isDown && !this.dragging) {
-    onMouseClickPixi(this, event)
+  if (this.isDown && !this.dragging) {
+    onMouseClickPixi(this, event);
   }
   this.isDown = false;
   this.fx = null;
   this.fy = null;
-  dragging = false;
+  // globalDragging = false;
   viewport.resumePlugin('drag');
 }
 
 function onMouseClickPixi(subject, event) {
   subject.isOver = true;
-  const coords = event.data.getLocalPosition(viewport.parent)
-  shockwaveFilter.center.x = coords.x;
-  shockwaveFilter.center.y = coords.y;
-  shockwaveFilter.time = 0.0;  
+  const coords = event.data.getLocalPosition(viewport.parent);
+  if (props.hasShockwaveFilter) {
+    shockwaveFilter.center.x = coords.x;
+    shockwaveFilter.center.y = coords.y;
+    shockwaveFilter.time = 0.0;  
+  }
 }
 
-let forceLinkActive = true;
-let mouseAttract = false;
-
-function handleLinkForceControl(e) {
-  if(forceLinkActive) {
+function handleLinkForceControl() {
+  if (forceLinkActive) {
     simulation.force('link', null);
     simulation.alphaTarget(0.3).restart();
-    forceLinkActive = false
+    forceLinkActive = false;
   } else {
     data.links = makeLinks(data.nodes);
     forceLink = d3
       .forceLink(data.links)
       .id(d => d.index)
-      .distance(linkDistance)
-      // .strength(1.5);
+      .distance(linkDistance);
     simulation.force('link', forceLink);
     simulation.alphaTarget(0.3).restart();
     forceLinkActive = true;
   }
 }
 
-function toggleMouseAttract(e) {
-  if(mouseAttract) {
-    // disable attract force
-    simulation
-      .velocityDecay(0.3)
-      .force('attract', null)
-      .force('charge', forceCharge)
-      .force('link', forceLink)
-      .force('collision', forceCollision)
-    if(forceLinkActive) simulation.force('link', forceLink)
-    simulation.alphaTarget(0.3).restart();
-    mouseAttract = false;
-  } else {
-    // enable attract force
-    // console.log(mouse, mouseAttract)
-    simulation
-      .velocityDecay(0.0)
-      .force('attract', forceAttract())
-      .force('charge', null)
-      .force('collision', null)
-    if(forceLinkActive) simulation.force('link', null)
-    simulation.alpha(0.4)
-    simulation.alphaTarget(0.3).restart();
-    mouseAttract = true;
-  }
-}
-
-function toggleSpriteVisibility(e) {
-
-}
-
-function toggleLinksVisibility(e) {
-
-}
-
 const linksToggle = document.createElement('div');
 linksToggle.setAttribute('class', 'control links');
 linksToggle.onclick = e => handleLinkForceControl(e);
-linksToggle.innerText = "Toggle Links";
-
-const mouseToggle = document.createElement('div');
-mouseToggle.setAttribute('class', 'control mouse-follow');
-mouseToggle.onclick = e => toggleMouseAttract(e);
-mouseToggle.innerText = "Follow Mouse";
+linksToggle.innerText = 'Toggle Links';
 
 document.body.appendChild(linksToggle);
-// document.body.appendChild(mouseToggle);

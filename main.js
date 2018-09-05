@@ -1,2 +1,2 @@
-import "./src/styles.scss";
-import "./src/index.js";
+import './src/styles.scss';
+import './src/index.js';

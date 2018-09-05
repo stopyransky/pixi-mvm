@@ -5,11 +5,9 @@
   "main": "main.js",
   "scripts": {
     "start": "webpack-dev-server --config=webpack.dev.js",
-    "start-build": "browser-sync start --server --files 'dist'",
     "build:dev": "NODE_ENV=development webpack --config=webpack.dev.js",
     "build": "NODE_ENV=production webpack --config=webpack.prod.js"
   },
-  "private": true,
   "keywords": [
     "pixi",
     "d3",
@@ -21,28 +19,28 @@
   "author": "Karol Stopyra",
   "license": "MIT",
   "dependencies": {
-    "d3": "^5.5.0",
+    "d3": "^5.7.0",
     "pixi-filters": "^2.6.1",
-    "pixi-viewport": "^2.7.2",
-    "pixi.js": "^4.8.1"
+    "pixi-viewport": "^3.6.2",
+    "pixi.js": "^4.8.2"
   },
   "devDependencies": {
-    "browser-sync": "^2.24.6",
     "clean-webpack-plugin": "^0.1.19",
-    "compression-webpack-plugin": "^1.1.11",
+    "compression-webpack-plugin": "^2.0.0",
     "css-loader": "^1.0.0",
-    "extract-loader": "^2.0.1",
-    "file-loader": "^1.1.11",
+    "eslint": "^5.5.0",
+    "extract-loader": "^3.0.0",
+    "file-loader": "^2.0.0",
     "html-loader": "^0.5.5",
     "html-webpack-plugin": "^3.2.0",
-    "mini-css-extract-plugin": "^0.4.1",
-    "node-sass": "^4.9.2",
-    "optimize-css-assets-webpack-plugin": "^5.0.0",
-    "sass-loader": "^7.0.3",
-    "style-loader": "^0.21.0",
-    "webpack": "^4.16.1",
+    "mini-css-extract-plugin": "^0.4.2",
+    "node-sass": "^4.9.3",
+    "optimize-css-assets-webpack-plugin": "^5.0.1",
+    "sass-loader": "^7.1.0",
+    "style-loader": "^0.23.0",
+    "webpack": "^4.17.2",
     "webpack-bundle-analyzer": "^2.13.1",
-    "webpack-cli": "^3.0.8",
-    "webpack-dev-server": "^3.1.5"
+    "webpack-cli": "^3.1.0",
+    "webpack-dev-server": "^3.1.7"
   }
 }
