@@ -1,16 +1,16 @@
 # About
 
-Repo contains an example of interactive data visualization on WebGL Canvas - force directed graph generated in Pixi and D3. 
+Repo contains a demo of interactive data visualization on WebGL Canvas - force directed graph generated in Pixi and D3. 
 
 ### [Github pages demo](https://stopyransky.github.io/pixi-mvm/) (better quality)
 ### [Codepen Demo](https://codepen.io/stopyransky/full/vrMxKQ/)
 
-# Features
+# Goals
 
 ## Interactivity
 
 ### Pointer interactivity on container level
-  - zooming (on scroll)
+  - zooming (on scroll) (/)
   - panning (on canvas drag)
 
 ### Pointer interactivity on particle level
