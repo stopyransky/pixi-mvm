@@ -281,7 +281,6 @@ function onDragEndPixi(event) {
   this.isDown = false;
   this.fx = null;
   this.fy = null;
-  // globalDragging = false;
   viewport.resumePlugin('drag');
 }
 
