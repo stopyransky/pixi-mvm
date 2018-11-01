@@ -1,6 +1,11 @@
+pixi-mvm
+========
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Language Grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/stopyransky/pixi-mvm.svg?label=code%20quality)](https://lgtm.com/projects/g/stopyransky/pixi-mvm/)
 # About
 
-Repo contains a demo of interactive data visualization on WebGL Canvas - force directed graph generated in Pixi and D3. 
+Repo contains a demo of interactive data visualization on WebGL Canvas - force directed graph generated in Pixi and D3.
 
 ### [Github pages demo](https://stopyransky.github.io/pixi-mvm/) (better quality)
 ### [Codepen Demo](https://codepen.io/stopyransky/full/vrMxKQ/)

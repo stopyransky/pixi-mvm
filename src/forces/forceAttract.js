@@ -68,7 +68,7 @@ export default function forceAttract(target) {
     return force;
   };
 
-  if (!strength) force.strength(0.1);
+  force.strength(0.1);
   if (!target) force.target([ 0, 0 ]);
 
   return force;

@@ -3,11 +3,11 @@ import Viewport from 'pixi-viewport';
 PIXI.extras.Viewport = Viewport;
 import * as d3 from 'd3';
 
-import { 
-  dotFilter, 
-  shockwaveFilter as shockwaveFilterConfig, 
-  crtFilter, 
-  advancedBloomFilter, 
+import {
+  dotFilter,
+  shockwaveFilter as shockwaveFilterConfig,
+  crtFilter,
+  advancedBloomFilter,
   godrayFilter,
   glitchFilter,
   zoomBlurFilter
@@ -142,8 +142,8 @@ function makeSprites(numberOfItems) {
   return sprites;
 }
 const linkFns = [
-  i => Math.floor(Math.random() * i), 
-  i => Math.floor(Math.random() * Math.sqrt(i)), 
+  i => Math.floor(Math.random() * i),
+  i => Math.floor(Math.random() * Math.sqrt(i)),
   i => Math.floor(Math.sqrt(i))
 ];
 
@@ -155,7 +155,7 @@ function makeLinks(nodes) {
       target: i + 1,
       value: Math.random() + 0.5
     }));
-    
+
   links.forEach(d => {
     linkedByIndex[`${d.source.index},${d.target.index}`] = true;
   });
@@ -208,7 +208,7 @@ function makeSimulation(data, manualMode) {
     });
 
   if (manualMode) simulation.stop();
-  
+
   return simulation;
 }
 
@@ -291,7 +291,7 @@ function onMouseClickPixi(subject, event) {
   if (props.hasShockwaveFilter) {
     shockwaveFilter.center.x = coords.x;
     shockwaveFilter.center.y = coords.y;
-    shockwaveFilter.time = 0.0;  
+    shockwaveFilter.time = 0.0;
   }
 }
 
@@ -314,7 +314,7 @@ function handleLinkForceControl() {
 
 const linksToggle = document.createElement('div');
 linksToggle.setAttribute('class', 'control links');
-linksToggle.onclick = e => handleLinkForceControl(e);
+linksToggle.onclick = handleLinkForceControl;
 linksToggle.innerText = 'Toggle Links';
 
 document.body.appendChild(linksToggle);
